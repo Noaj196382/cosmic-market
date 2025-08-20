@@ -1,0 +1,37 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/products",
+      "destination": "/api-products.js"
+    },
+    {
+      "source": "/api/orders",
+      "destination": "/api-orders.js"
+    },
+    {
+      "source": "/api/orders/number/(.*)",
+      "destination": "/api-order-lookup.js?orderNumber=$1"
+    },
+    {
+      "source": "/ping",
+      "destination": "/api-ping.js"
+    },
+    {
+      "source": "/monitor",
+      "destination": "/api-monitor.js"
+    },
+    {
+      "source": "/status",
+      "destination": "/api-status.js"
+    },
+    {
+      "source": "/health",
+      "destination": "/api-health.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
