@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Market - Premium Digital Services</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f9fafb; }
+        .header { background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1rem 0; }
+        .nav { max-width: 1200px; margin: 0 auto; padding: 0 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.5rem; font-weight: bold; color: #6366f1; }
+        .hero { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 4rem 1rem; text-align: center; }
+        .hero h1 { font-size: 3rem; margin-bottom: 1rem; }
+        .hero p { font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.9; }
+        .main { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; }
+        .section { margin-bottom: 3rem; }
+        .section h2 { font-size: 2rem; margin-bottom: 1.5rem; color: #374151; }
+        .products { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .product-card { background: white; padding: 1.5rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .product-card h3 { font-size: 1.25rem; margin-bottom: 0.5rem; color: #374151; }
+        .product-card p { color: #6b7280; margin-bottom: 1rem; }
+        .price { font-size: 1.5rem; font-weight: bold; color: #6366f1; }
+        .btn { background: #6366f1; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 0.375rem; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn:hover { background: #4f46e5; }
+        .orders-section { background: white; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        .search-box { display: flex; gap: 1rem; margin-bottom: 1rem; }
+        .search-box input { flex: 1; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem; }
+        .order-result { background: #f3f4f6; padding: 1rem; border-radius: 0.375rem; margin-top: 1rem; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">
+                <i class="fas fa-rocket"></i> Cosmic Market
+            </div>
+            <div>
+                <button class="btn" onclick="showOrders()">
+                    <i class="fas fa-package"></i> Orders
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h1>Premium Digital Services</h1>
+        <p>Lifetime streaming accounts, Discord boosts, and exclusive decorations</p>
+        <button class="btn" onclick="scrollToProducts()">
+            Shop Now <i class="fas fa-arrow-down"></i>
+        </button>
+    </section>
+
+    <main class="main">
+        <div id="orders-page" class="hidden">
+            <div class="orders-section">
+                <h2><i class="fas fa-search"></i> Order Lookup</h2>
+                <p style="color: #6b7280; margin-bottom: 1rem;">Find your order using the order number</p>
+                <div class="search-box">
+                    <input type="text" id="orderSearch" placeholder="Enter order number (e.g., CM1234567890)">
+                    <button class="btn" onclick="searchOrder()">Search</button>
+                </div>
+                <div id="orderResult"></div>
+            </div>
+            <button class="btn" onclick="showHome()">Back to Store</button>
+        </div>
+
+        <div id="products-page">
+            <section class="section" id="products">
+                <h2><i class="fas fa-tv"></i> Digital Products</h2>
+                <div class="products" id="products-grid">
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        let products = [];
+
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/products');
+                products = await response.json();
+                displayProducts();
+            } catch (error) {
+                console.error('Error loading products:', error);
+            }
+        }
+
+        function displayProducts() {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = products.map(product => `
+                <div class="product-card">
+                    <h3><i class="${product.icon}"></i> ${product.name}</h3>
+                    <p>${product.description}</p>
+                    <div class="price">
+                        ${product.currency === 'EUR' ? '€' : '$'}${product.price}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showOrders() {
+            document.getElementById('products-page').classList.add('hidden');
+            document.getElementById('orders-page').classList.remove('hidden');
+        }
+
+        function showHome() {
+            document.getElementById('orders-page').classList.add('hidden');
+            document.getElementById('products-page').classList.remove('hidden');
+        }
+
+        function scrollToProducts() {
+            document.getElementById('products').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function searchOrder() {
+            const orderNumber = document.getElementById('orderSearch').value.trim();
+            const resultDiv = document.getElementById('orderResult');
+
+            if (!orderNumber) {
+                resultDiv.innerHTML = '<p style="color: #ef4444;">Please enter an order number</p>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<p>Searching...</p>';
+
+            try {
+                const response = await fetch(`/api/orders/number/${orderNumber}`);
+                
+                if (response.ok) {
+                    const order = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="order-result">
+                            <h3>Order #${order.orderNumber}</h3>
+                            <p><strong>Status:</strong> ${order.status}</p>
+                            <p><strong>Total:</strong> $${order.total}</p>
+                            <p><strong>Created:</strong> ${new Date(order.createdAt).toLocaleDateString()}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = '<p style="color: #ef4444;">Order not found.</p>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<p style="color: #ef4444;">Error searching for order.</p>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProducts();
+            document.getElementById('orderSearch').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') searchOrder();
+            });
+        });
+    </script>
+</body>
+</html>
